@@ -69,7 +69,7 @@ export class CommentsService {
       throw new BadRequestException('Usted no ha comprado esta rutina');
     }
     const reciboDeCompra = await this.reciboRepository.findOne({
-      where: { rutina: { id: routine } },
+      where: { rutinas: { id: routine } },
       relations: ['rutina'], 
     });
     

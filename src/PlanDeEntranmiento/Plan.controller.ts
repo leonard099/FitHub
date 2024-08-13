@@ -67,7 +67,8 @@ export class PlanController {
   }
 
   @Post('create-order')
-  async createSubscription(@Req() req: Request, @Res() res) {
+  @UseGuards(AuthGuard)
+  async createSubscription(@Req() req, @Res() res) {
     const result = await this.planService.createSubscription(req, res);
     return result;
   }

@@ -7,6 +7,7 @@ import {
   JoinTable,
   ManyToMany,
   ManyToOne,
+  OneToMany,
   OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
@@ -38,7 +39,9 @@ export class Recibo {
   @JoinColumn({ name: 'recibo_plan' })
   plan: Plan;
 
-  @OneToOne(() => Rutina, (rutina) => rutina.recibo, { nullable: true })
-  @JoinColumn({ name: 'recibo_rutina' })
-  rutina: Rutina;
+  // @OneToMany(() => Rutina, (rutina) => rutina.recibo, { nullable: true })
+  // @JoinColumn({ name: 'recibo_rutina' })
+  // rutina: Rutina;
+  @OneToMany(() => Rutina, (rutina) => rutina.recibo, { nullable: true })
+  rutinas: Rutina[];
 }

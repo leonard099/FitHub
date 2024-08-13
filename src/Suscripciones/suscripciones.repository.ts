@@ -87,4 +87,14 @@ export class SubscriptionsRepository {
   async saveSubscriptions(subscription: Suscripciones) {
     return this.subscriptionRepository.save(subscription);
   }
+
+  async getSubscriptionByUserAndPlan(userId, planId) {
+    return await this.subscriptionRepository.findOne({
+      where: {
+        user: { id: userId },
+        plan: { id: planId },
+        state: true,
+      },
+    });
+  }
 }

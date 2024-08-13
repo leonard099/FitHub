@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { InjectRepository } from '@nestjs/typeorm';
 import { Rutina } from './Rutina.entity';
@@ -22,6 +23,7 @@ import { ReciboService } from 'src/Recibo/recibo.service';
 import { CreateReciboDto } from 'src/Recibo/createRecibo.dto';
 import { Request, Response } from 'express';
 import { StateRecibo } from 'src/Recibo/recibo.enum';
+import axios from 'axios';
 
 @Injectable()
 export class RutinaRepository {
@@ -184,23 +186,24 @@ export class RutinaRepository {
 
   ////////////////////////////////Mercado Pago///////////////////////////////////////////
 
-  async createOrderRoutine(req: Request, res: Response) {
-    const userId = req.body.id;
+  async createOrderRoutine(req, res) {
+    const userId = req.user.sub;
     const rutinaId = req.body.rutinaId;
 
     try {
       const user = await this.userRepository.findOne({
-        where: { id: userId },
+        where: { id: userId, isActive: true },
         relations: ['routine'],
       });
+      console.log(user);
       if (!user) {
         throw new ConflictException('Usuario no encontrado');
       }
-      if (user.routine.some((r) => r.id === rutinaId)) {
-        throw new BadRequestException(
-          'Usted ya ha comprado anteriormente esta rutina',
-        );
-      }
+      // if (user.routine.some((r) => r.id === rutinaId)) {
+      //   throw new BadRequestException(
+      //     'Usted ya ha comprado anteriormente esta rutina',
+      //   );
+      // }
       const rutina = await this.rutinaRepository.findOne({
         where: { id: rutinaId },
       });
@@ -211,7 +214,7 @@ export class RutinaRepository {
       const body = {
         items: [
           {
-            id: req.body.id,
+            id: req.user.sub,
             title: req.body.title,
             rutinaId: req.body.rutinaId,
             quantity: 1,
@@ -229,9 +232,12 @@ export class RutinaRepository {
       const preference = new Preference(client);
       const result = await preference.create({ body });
       res.json({
-        id: result.id,
+        result,
       });
+      
+      console.log(result);
 
+      
       user.routine.push(rutina);
       await this.userRepository.save(user);
 
@@ -243,7 +249,7 @@ export class RutinaRepository {
         state: StateRecibo.PAGADO,
       };
 
-      await this.reciboService.createRecibo(reciboData);
+      const reciboGuardado = await this.reciboService.createRecibo(reciboData);
 
       return result;
     } catch (error) {
@@ -252,3 +258,97 @@ export class RutinaRepository {
     }
   }
 }
+
+
+
+
+// async createOrderRoutine(req, res) {
+//   const userId = req.user.sub;
+//   const rutinaId = req.body.rutinaId;
+
+//   try {
+//     const user = await this.userRepository.findOne({
+//       where: { id: userId, isActive: true },
+//       relations: ['routine'],
+//     });
+
+//     if (!user) {
+//       throw new ConflictException('Usuario no encontrado');
+//     }
+
+//     const rutina = await this.rutinaRepository.findOne({
+//       where: { id: rutinaId },
+//     });
+//     if (!rutina) {
+//       throw new ConflictException('Rutina no encontrada');
+//     }
+
+//     const body = {
+//       items: [
+//         {
+//           id: req.user.sub,
+//           title: req.body.title,
+//           rutinaId: req.body.rutinaId,
+//           quantity: 1,
+//           unit_price: Number(req.body.unit_price),
+//           currency_id: 'ARS',
+//         },
+//       ],
+//       back_urls: {
+//         success: 'http://localhost:3000/mercadoPago/success',
+//         failure: 'http://localhost:3000/mercadoPago/failure',
+//       },
+//       notification_url: 'http://localhost:3000/mercadoPago/notification', // URL para recibir la notificación de MercadoPago
+//       auto_return: 'approved',
+//     };
+
+//     const preference = new Preference(client);
+//     const result = await preference.create({ body });
+//     res.json({
+//       init_point: result.body.init_point, // Enviar el init_point al frontend para redirigir al usuario
+//     });
+
+//     // Aquí no hacemos el push ni creamos el recibo aún
+
+//     // La notificación será manejada en otra parte, donde verificas el estado del pago y procedes.
+    
+//   } catch (error) {
+//     console.error(error);
+//     res.status(400).send('Error al crear la preferencia de pago');
+//   }
+// }
+
+// // Otro endpoint para manejar la notificación
+// async handleNotification(req, res) {
+//   const paymentId = req.body.data.id; // o req.query.id dependiendo de cómo recibas los datos
+
+//   try {
+//     const payment = await axios.get(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
+//       headers: {
+//         'Authorization': `Bearer YOUR_ACCESS_TOKEN`,
+//       }
+//     });
+
+//     if (payment.data.status === 'approved') {
+//       // Asociar la rutina al usuario
+//       user.routine.push(rutina);
+//       await this.userRepository.save(user);
+
+//       // Crear el recibo
+//       const reciboData = {
+//         user,
+//         rutinas: [rutina],
+//         planes: [],
+//         price: Number(req.body.unit_price),
+//         state: StateRecibo.PAGADO,
+//       };
+
+//       const reciboGuardado = await this.reciboService.createRecibo(reciboData);
+//     }
+
+//     res.status(200).send('Notificación recibida y procesada');
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).send('Error al procesar la notificación de pago');
+//   }
+// }

@@ -4,6 +4,10 @@ import {
   NotAcceptableException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import {
+  AdminPermissionException,
+  NoPendingRequestsException,
+} from 'src/Exceptions/Admin.exceptions';
 import { MailerService } from 'src/mailer/mailer.service';
 import { Plan } from 'src/PlanDeEntranmiento/Plan.entity';
 import { Rutina } from 'src/Rutina/Rutina.entity';
@@ -25,7 +29,7 @@ export class AdminRepository {
   async solicitudPending(id: string) {
     const admin = await this.userRepository.findOne({ where: { id } });
     if (admin.role !== 'admin') {
-      throw new Error('No tienes permisos para realizar esta accion');
+      throw new AdminPermissionException();
     }
     const coachs = await this.userRepository.find({
       where: { solicitud: SolicitudState.PENDING },
@@ -39,6 +43,10 @@ export class AdminRepository {
       relations: ['admin', 'category', 'exercise'],
     });
 
+    if (coachs.length === 0 && planes.length === 0 && rutinas.length === 0) {
+      throw new NoPendingRequestsException();
+    }
+
     return { coachs, planes, rutinas };
   }
 
@@ -50,9 +58,7 @@ export class AdminRepository {
   ) {
     const admin = await this.userRepository.findOne({ where: { id } });
     if (admin.role !== 'admin') {
-      throw new BadRequestException(
-        'No tienes permisos para realizar esta accion',
-      );
+      throw new AdminPermissionException();
     }
     if (coach) {
       const user = await this.userRepository.findOne({ where: { id: coach } });
@@ -263,3 +269,25 @@ export class AdminRepository {
     }
   }
 }
+
+//  if (coach) {
+//   const user = await this.userRepository.findOne({ where: { id: coach } });
+//   if (user.solicitud === SolicitudState.ACCEPTED) {
+//     throw new AlreadyAcceptedException('el usuario');
+//   }
+//   if (user.solicitud === SolicitudState.DENIED) {
+//     throw new AlreadyDeniedException('el usuario');
+//   }
+//   if (user.solicitud === SolicitudState.PENDING) {
+//     await this.userRepository.update(coach, {
+//       solicitud: SolicitudState.ACCEPTED,
+//       role: UserRole.ENTRENADOR,
+//     });
+//     await this.mailerService.notificarRegistro(
+//       user.email,
+//       'Solicitud aceptada',
+//       'Tu solicitud ha sido aceptada, bienvenido a FitHub',
+//     );
+//     return 'Solicitud aceptada';
+//   }
+// }

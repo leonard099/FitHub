@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import { ConflictException, Injectable } from '@nestjs/common';
 import { RutinaRepository } from './Rutina.reposity';
 import { CreateRutinaDto } from './Rutinas.Dto';
@@ -12,6 +13,8 @@ import { Rutina } from './Rutina.entity';
 import { Plan } from 'src/PlanDeEntranmiento/Plan.entity';
 import { CreateReciboDto } from 'src/Recibo/createRecibo.dto';
 import { FilesUploadService } from 'src/files-upload/files-upload.service';
+import { Preference } from 'mercadopago';
+import { planClient } from 'config/mercadoPagoPlan.config';
 
 @Injectable()
 export class RutinaService {
@@ -50,40 +53,11 @@ export class RutinaService {
   async createRutina(rutina: CreateRutinaDto, userId: string) {
     return await this.rutinasRepository.createRutina(rutina, userId);
   }
-  async createOrderRoutine(req: Request, res: Response) {
-    const ordenCreada = await this.rutinasRepository.createOrderRoutine(
+  async createOrderRoutine(req, res) {
+   return await this.rutinasRepository.createOrderRoutine(
       req,
       res,
     );
-
-    if (!ordenCreada || undefined) {
-      throw new ConflictException('No se pudo ejecutar la orden de compra');
-    }
-
-    const userId = req.body.id;
-    const rutinaId = req.body.rutinaId;
-    const user = await this.userRepository.findOneBy({ id: userId });
-    if (!user) {
-      throw new ConflictException('Usuario no encontrado');
-    }
-    console.log(user);
-    const rutina = await this.rutinasRepository.getRutinaById(rutinaId);
-    if (!rutina) {
-      throw new ConflictException('Rutina no encontrada');
-    }
-    console.log(rutina);
-
-    const reciboDeCompra: CreateReciboDto = {
-      user: user,
-      rutina,
-      price: req.body.unit_price,
-      state: StateRecibo.PAGADO,
-    };
-    const reciboGuardado = await this.reciboRepository.save(reciboDeCompra);
-    if (!reciboGuardado) {
-      throw new ConflictException('No se pudo crear el recibo');
-    }
-    return 'recibo creado';
   }
   async updateRutina(rutina, id, user) {
     return await this.rutinasRepository.updateRutina(rutina, id, user);

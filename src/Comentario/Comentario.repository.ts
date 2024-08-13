@@ -5,6 +5,12 @@ import { CommentDto } from './Comentario.dto';
 import { IsNull, Not, Repository } from 'typeorm';
 import { Rutina } from 'src/Rutina/Rutina.entity';
 import { EstadoComentario } from './EstadoComentario.Enum';
+import {
+  ComentarioActualizacionFallidaException,
+  ComentarioCreacionFallidaException,
+  ComentarioInactivoException,
+  ComentarioNoEncontradoException,
+} from 'src/Exceptions/Comentario.exceptions';
 
 @Injectable()
 export class CommentsRepository {
@@ -42,18 +48,30 @@ export class CommentsRepository {
   }
 
   async getCommentById(id: string) {
-    return await this.commentsRepository.findOne({
+    const comment = await this.commentsRepository.findOne({
       where: { id, isActive: true },
     });
+    if (!comment) {
+      throw new ComentarioNoEncontradoException();
+    }
+    return comment;
   }
 
   async createCommentsRutina(comment: CommentDto) {
-    const comentarioRegistrado = await this.commentsRepository.save(comment);
-    return comentarioRegistrado;
+    try {
+      const comentarioRegistrado = await this.commentsRepository.save(comment);
+      return comentarioRegistrado;
+    } catch (error) {
+      throw new ComentarioCreacionFallidaException();
+    }
   }
   async createCommentsPlan(comment: CommentDto) {
-    await this.commentsRepository.save(comment);
-    return 'Comentario creado';
+    try {
+      const comentarioRegistrado = await this.commentsRepository.save(comment);
+      return comentarioRegistrado;
+    } catch (error) {
+      throw new ComentarioCreacionFallidaException();
+    }
   }
 
   async updateComment(comment: CommentDto, id: string) {
@@ -62,7 +80,7 @@ export class CommentsRepository {
       isActive: true,
     });
     if (!existingComment) {
-      throw new Error('Comentario no econtrado');
+      throw new ComentarioNoEncontradoException();
     }
 
     const updateData = {
@@ -72,15 +90,22 @@ export class CommentsRepository {
       plan: comment.plan,
     };
 
-    await this.commentsRepository.update(id, updateData);
-    const commentUpdate = await this.commentsRepository.findOneBy({ id });
-    return commentUpdate;
+    try {
+      await this.commentsRepository.update(id, updateData);
+      const commentUpdate = await this.commentsRepository.findOneBy({ id });
+      return commentUpdate;
+    } catch (error) {
+      throw new ComentarioActualizacionFallidaException();
+    }
   }
 
   async deleteComment(id: string) {
     const deletedComment = await this.commentsRepository.findOneBy({ id });
     if (!deletedComment || deletedComment.isActive === false) {
-      throw new Error('Comentario no encontrado');
+      if (!deletedComment) {
+        throw new ComentarioNoEncontradoException();
+      }
+      throw new ComentarioInactivoException();
     }
     await this.commentsRepository.update(id, {
       ...deletedComment,

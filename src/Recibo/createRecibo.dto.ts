@@ -21,7 +21,7 @@ export class CreateReciboDto {
 
   @IsUUID(undefined, { each: true })
   @IsOptional()
-  rutina?: Rutina;
+  rutinas?: Rutina[];
 
   @IsNumber()
   price: number;

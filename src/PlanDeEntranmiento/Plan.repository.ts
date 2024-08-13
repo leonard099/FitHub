@@ -1,6 +1,8 @@
+/* eslint-disable prettier/prettier */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import {
   BadRequestException,
+  ConflictException,
   HttpException,
   Injectable,
   NotFoundException,
@@ -180,17 +182,41 @@ export class PlanRepository {
   ////////////////////////////////Mercado Pago///////////////////////////////////////////
 
   // REVISAR EL CHEQUEO DE SI YA EXISTE EL PLAN DENTRO DEL USER. ASI NO COMPRADOS VECES. REVISAR EL INVOICE DE CADUCIDAD
-  async createOrderPlan(req: Request, res: Response) {
+  async createOrderPlan(req, res) {
     const userId = req.body.id;
-    const planId = req.body.plandId;
+    const planId = req.body.planId;
     // const planYaComprado = await this.planRepository.findOne({
     //   where: { id: planId },
     // });
     // if (planYaComprado) {
     //   throw new BadRequestException('Usted ya posee este plan');
     // }
-
+    console.log(userId, planId);
     try {
+      const existingSubscription =
+        await this.subscriptionsRepository.getSubscriptionByUserAndPlan(
+          userId,
+          planId,
+        );
+
+      if (existingSubscription) {
+        throw new BadRequestException('Su suscripción aún no se ha vencido');
+      }
+
+      const user = await this.userRepository.findOne({
+        where: { id: userId, isActive: true },
+      });
+      
+      if (!user) {
+        throw new ConflictException('Usuario no encontrado');
+      }
+
+      const plan = await this.planRepository.findOne({ where: { id: planId } });
+
+      if (!plan) {
+        throw new ConflictException('Plan no encontrado');
+      }
+      
       const body = {
         items: [
           {
