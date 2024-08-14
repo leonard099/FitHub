@@ -24,7 +24,7 @@ export class AdminRepository {
         @InjectRepository(Users) private readonly userRepository: Repository<Users>,
         @InjectRepository(Plan) private readonly planRepository: Repository<Plan>,
         @InjectRepository(Rutina) private readonly rutinaRepository: Repository<Rutina>
-
+){}
 async solicitudPending(id: string) {
     const admin = await this.userRepository.findOne({ where: { id } });
     if (admin.role !== 'admin') {
