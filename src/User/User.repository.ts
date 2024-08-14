@@ -16,16 +16,6 @@ export class UsersRepository {
     return allUsers;
   }
 
-
-  async getUserById(id: string) {
-    return await this.userRepository.findOne({
-      where: {
-        id,
-        isActive: true,
-      },
-      relations: ['routine', 'subsciption.plan'],
-    });
-
   async getCoach() {
     const allCoach = await this.userRepository.find({
       where: { role:UserRole.ENTRENADOR, isActive: true },
@@ -34,7 +24,9 @@ export class UsersRepository {
     return allCoach;
   }
 
-  
+  async getUserById(id) {
+    return await this.userRepository.findOneBy({ id, isActive: true });
+  }
   async getUserByIdPyR(id) {
     const userRyP = await this.userRepository.findOne({
       where: { id, isActive: true },
@@ -69,22 +61,14 @@ export class UsersRepository {
     if (!user) {
       throw new NotFoundException('Usuario no encontrado');
     }
-    if (
-      user.solicitud === SolicitudState.NONE ||
-      user.solicitud === SolicitudState.CORRECTION
-    ) {
-      await this.userRepository.update(userId, {
-        ...user,
-        solicitud: SolicitudState.PENDING,
-        cvpdf: body.cvpdf,
-        cvvideo: body.cvvideo,
-      });
+    if (user.solicitud === SolicitudState.NONE || user.solicitud === SolicitudState.CORRECTION) {
+      await this.userRepository.update(userId, { ...user, solicitud:SolicitudState.PENDING, cvpdf: body.cvpdf, cvvideo: body.cvvideo });
       return 'Solicitud enviada';
-    } else if (user.solicitud === 'pending') {
+    } else if(user.solicitud === 'pending') {
       return 'Ya tienes una solicitud pendiente';
-    } else if (user.solicitud === SolicitudState.ACCEPTED) {
+    } else if(user.solicitud === SolicitudState.ACCEPTED) {
       return 'Ya eres entrenador';
-    } else if (user.solicitud === SolicitudState.DENIED) {
+    } else if(user.solicitud === SolicitudState.DENIED) {
       return 'Tu solicitud fue denegada, no puedes enviar otra solicitud, contacta con soporte';
     }
   }
@@ -95,7 +79,6 @@ export class UsersRepository {
   }
 
   async updateUser(user: UpdateUserDto, id: string) {
-    //let updatedUser = await this.userRepository.findOneBy({ id });
     const userUpdated = await this.userRepository.update(id, user);
 
     return userUpdated;
