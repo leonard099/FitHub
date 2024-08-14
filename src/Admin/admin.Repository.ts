@@ -49,79 +49,6 @@ export class AdminRepository {
     return { coachs, planes, rutinas };
   }
 
-  // async aceptarSolicitud(
-  //   id: string,
-  //   coach?: string,
-  //   plan?: string,
-  //   rutina?: string,
-  // ) {
-  //   const admin = await this.userRepository.findOne({ where: { id } });
-  //   if (admin.role !== 'admin') {
-  //     throw new AdminPermissionException();
-  //   }
-  //   if (coach) {
-  //     const user = await this.userRepository.findOne({ where: { id: coach } });
-  //     if (user.solicitud === SolicitudState.PENDING) {
-  //       await this.userRepository.update(coach, {
-  //         solicitud: SolicitudState.ACCEPTED,
-  //         role: UserRole.ENTRENADOR,
-  //       });
-  //       await this.mailerService.notificarRegistro(
-  //         user.email,
-  //         'Solicitud aceptada',
-  //         'Tu solicitud ha sido aceptada, bienvenido a FitHub',
-  //       );
-  //       return 'Solicitud aceptada';
-  //     }
-  //     if (user.solicitud === SolicitudState.DENIED) {
-  //       throw new BadRequestException(
-  //         'Ya tienes una solicitud denegada, comunicarte con la administracion',
-  //       );
-  //     }
-  //     throw new BadRequestException('No hay solicitudes pendientes');
-  //   } else if (plan) {
-  //     const planSol = await this.planRepository.findOne({
-  //       where: { id: plan },
-  //       relations: ['admin'],
-  //     });
-  //     if (planSol.check === SolicitudState.PENDING) {
-  //       await this.planRepository.update(plan, {
-  //         check: SolicitudState.ACCEPTED,
-  //       });
-  //       await this.mailerService.notificarRegistro(
-  //         planSol.admin.email,
-  //         'Solicitud aceptada',
-  //         'Tu solicitud ha sido aceptada, tu plan de entrenamineto ya se encuentra activo en FitHub',
-  //       );
-  //       return 'Solicitud aceptada';
-  //     } else if (planSol.check === SolicitudState.DENIED) {
-  //       throw new BadRequestException(
-  //         'Ya tienes una solicitud denegada, comunicarte con la administracion',
-  //       );
-  //     }
-  //   } else if (rutina) {
-  //     const rutinaSol = await this.rutinaRepository.findOne({
-  //       where: { id: rutina },
-  //       relations: ['admin'],
-  //     });
-  //     if (rutinaSol.check === SolicitudState.PENDING) {
-  //       await this.rutinaRepository.update(rutina, {
-  //         check: SolicitudState.ACCEPTED,
-  //       });
-  //       await this.mailerService.notificarRegistro(
-  //         rutinaSol.admin.email,
-  //         'Solicitud aceptada',
-  //         'Tu solicitud ha sido aceptada, tu rutina ya se encuentra activa en FitHub',
-  //       );
-  //       return 'Solicitud aceptada';
-  //     } else if (rutinaSol.check === SolicitudState.DENIED) {
-  //       throw new BadRequestException(
-  //         'Ya tienes una solicitud denegada, comunicarte con la administracion',
-  //       );
-  //     }
-  //   }
-  // }
-
   async aceptarSolicitud(
     id: string,
     coach?: string,
@@ -325,24 +252,3 @@ export class AdminRepository {
     }
   }
 }
-
-//  if (coach) {
-//   const user = await this.userRepository.findOne({ where: { id: coach } });
-//   if (user.solicitud === SolicitudState.ACCEPTED) {
-//     throw new AlreadyAcceptedException('el usuario');
-//   }
-//   if (user.solicitud === SolicitudState.DENIED) {
-//     throw new AlreadyDeniedException('el usuario');
-//   }
-//   if (user.solicitud === SolicitudState.PENDING) {
-//     await this.userRepository.update(coach, {
-//       solicitud: SolicitudState.ACCEPTED,
-//       role: UserRole.ENTRENADOR,
-//     });
-//     await this.mailerService.notificarRegistro(
-//       user.email,
-//       'Solicitud aceptada',
-//       'Tu solicitud ha sido aceptada, bienvenido a FitHub',
-//     );
-//     return 'Solicitud aceptada';
-//   }
