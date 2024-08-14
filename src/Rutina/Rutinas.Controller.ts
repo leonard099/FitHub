@@ -89,7 +89,7 @@ export class RutinaController {
     @Param('id') id: UUID,
   ) {
     const user = req.user;
-    return await this.rutinaService.updasteRutina(rutina, id, user);
+    return await this.rutinaService.updateRutina(rutina, id, user);
   }
 
   @Delete(':id')
