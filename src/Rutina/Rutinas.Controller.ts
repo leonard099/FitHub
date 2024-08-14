@@ -74,7 +74,7 @@ export class RutinaController {
   @Post('create-order')
   @Roles(UserRole.ADMIN, UserRole.SUPERADMIN, UserRole.ENTRENADOR, UserRole.USER)
   @UseGuards(AuthGuard, RolesGuard)
-  async createOrder(@Req() req: Request, @Res() res: Response) {
+  async createOrder(@Req() req, @Res() res: Response) {
     const result = await this.rutinaService.createOrderRoutine(req, res);
     console.log(req.body);
     return result;
@@ -89,7 +89,7 @@ export class RutinaController {
     @Param('id') id: UUID,
   ) {
     const user = req.user;
-    return await this.rutinaService.updateRutina(rutina, id, user);
+    return await this.rutinaService.updasteRutina(rutina, id, user);
   }
 
   @Delete(':id')

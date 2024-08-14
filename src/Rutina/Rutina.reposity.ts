@@ -155,7 +155,9 @@ export class RutinaRepository {
         rutinaToUpdate.category = category;
       }
       const { category, ...rutinaSinCategory } = rutinaToUpdate;
+      rutinaSinCategory.check = SolicitudState.PENDING;
       return await this.rutinaRepository.update(id, rutinaSinCategory);
+      
     }
   }
   async deleteRutina(id, user) {
@@ -184,8 +186,8 @@ export class RutinaRepository {
 
   ////////////////////////////////Mercado Pago///////////////////////////////////////////
 
-  async createOrderRoutine(req: Request, res: Response) {
-    const userId = req.body.id;
+  async createOrderRoutine(req, res: Response) {
+    const userId = req.user.sub;
     const rutinaId = req.body.rutinaId;
 
     try {
