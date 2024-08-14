@@ -70,7 +70,12 @@ export class PlanController {
   }
 
   @Post('create-order')
-  @Roles(UserRole.ADMIN, UserRole.SUPERADMIN, UserRole.ENTRENADOR, UserRole.USER)
+  @Roles(
+    UserRole.ADMIN,
+    UserRole.SUPERADMIN,
+    UserRole.ENTRENADOR,
+    UserRole.USER,
+  )
   @UseGuards(AuthGuard, RolesGuard)
   async createSubscription(@Req() req: Request, @Res() res) {
     const result = await this.planService.createSubscription(req, res);
@@ -100,7 +105,10 @@ export class PlanController {
   }
 
   @Post('webhook')
+  @UseGuards(AuthGuard)
   async webhook(@Req() req, @Res() res) {
-    return await this.planService.webhook(req, res);
+    const data = req.body;
+    const userId = req.user.sub;
+    return await this.planService.webhook(data, userId);
   }
 }

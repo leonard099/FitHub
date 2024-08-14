@@ -15,10 +15,11 @@ import { EjercicioRepository } from 'src/Ejercicios/Ejercicios.repository';
 import { Ejercicio } from 'src/Ejercicios/Ejercicios.entity';
 import { RutinaRepository } from 'src/Rutina/Rutina.reposity';
 import { RutinaModule } from 'src/Rutina/Rutina.module';
+import { Pago } from 'src/Pagos/Pagos.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Plan, Users, Category, Ejercicio]),
+    TypeOrmModule.forFeature([Plan, Users, Category, Ejercicio, Pago]),
     SubscriptionsModule,
     FilesUploadModule,
     RutinaModule,
