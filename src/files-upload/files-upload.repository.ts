@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { UploadApiResponse, v2 } from 'cloudinary';
 import toStream = require('buffer-to-stream');
+import { ArchivosNoSubidosException } from 'src/Exceptions/Files.exceptions';
 
 @Injectable()
 export class FilesUploadRepository {
@@ -14,7 +15,7 @@ export class FilesUploadRepository {
           { resource_type: resourceType },
           (error, result) => {
             if (error) {
-              reject(error);
+              reject(new ArchivosNoSubidosException());
             } else {
               resolve(result);
             }
@@ -36,7 +37,7 @@ export class FilesUploadRepository {
           { resource_type: 'raw' },
           (error, result) => {
             if (error) {
-              reject(error);
+              reject(new ArchivosNoSubidosException());
             } else {
               resolve(result);
             }
