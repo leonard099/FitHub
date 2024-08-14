@@ -23,7 +23,7 @@ export class ReciboRepository {
   }
 
   async getAllRecibos() {
-    return await this.reciboRepository.find();
+    return await this.reciboRepository.find({ relations: ['rutina'] });
   }
 
   async getReciboById(id: string) {

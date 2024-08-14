@@ -655,8 +655,7 @@ export class SeederService {
     ];
     console.log(categoria1, categoria2);
     console.log(planes);
-    planes.map(async (plan) => await this.planRepository.save(plan));
-
+    await Promise.all(planes.map(plan => this.planRepository.save(plan)));
     return 'planes creados';
   }
 
