@@ -1,21 +1,11 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotAcceptableException,
-} from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import {
-  AdminPermissionException,
-  NoPendingRequestsException,
-} from 'src/Exceptions/Admin.exceptions';
-import { MailerService } from 'src/mailer/mailer.service';
-import { Plan } from 'src/PlanDeEntranmiento/Plan.entity';
-import { Rutina } from 'src/Rutina/Rutina.entity';
-import { Users } from 'src/User/User.entity';
-import { SolicitudState, UserRole } from 'src/User/User.enum';
-import { UsersRepository } from 'src/User/User.repository';
-import { Repository } from 'typeorm';
-
+import { BadRequestException, Injectable, NotAcceptableException } from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
+import { MailerService } from "src/mailer/mailer.service";
+import { Plan } from "src/PlanDeEntranmiento/Plan.entity";
+import { Rutina } from "src/Rutina/Rutina.entity";
+import { Users } from "src/User/User.entity";
+import { SolicitudState, UserRole } from "src/User/User.enum";
+import { Repository } from "typeorm";
 
 @Injectable()
 export class AdminRepository {
@@ -24,101 +14,15 @@ export class AdminRepository {
         @InjectRepository(Users) private readonly userRepository: Repository<Users>,
         @InjectRepository(Plan) private readonly planRepository: Repository<Plan>,
         @InjectRepository(Rutina) private readonly rutinaRepository: Repository<Rutina>
-){}
-async solicitudPending(id: string) {
-    const admin = await this.userRepository.findOne({ where: { id } });
-    if (admin.role !== 'admin') {
-      throw new AdminPermissionException();
-    }
-    const coachs = await this.userRepository.find({
-      where: { solicitud: SolicitudState.PENDING },
-    });
-    const planes = await this.planRepository.find({
-      where: { check: SolicitudState.PENDING },
-      relations: ['admin', 'category'],
-    });
-    const rutinas = await this.rutinaRepository.find({
-      where: { check: SolicitudState.PENDING },
-      relations: ['admin', 'category', 'exercise'],
-    });
 
-    if (coachs.length === 0 && planes.length === 0 && rutinas.length === 0) {
-      throw new NoPendingRequestsException();
+    ) {}
+    
+    async solicitudPending(id:string) {
+        const coachs = await this.userRepository.find({where:{solicitud:SolicitudState.PENDING}});
+        const planes = await this.planRepository.find({where:{check:SolicitudState.PENDING}, relations:['admin','category']});
+        const rutinas = await this.rutinaRepository.find({where:{check:SolicitudState.PENDING},relations:['admin','category','exercise']});
+        return {coachs, planes, rutinas}   
     }
-
-    return { coachs, planes, rutinas };
-  }
-
-  async aceptarSolicitud(
-    id: string,
-    coach?: string,
-    plan?: string,
-    rutina?: string,
-  ) {
-    const admin = await this.userRepository.findOne({ where: { id } });
-    if (admin.role !== 'admin') {
-      throw new AdminPermissionException();
-    }
-    if (coach) {
-      const user = await this.userRepository.findOne({ where: { id: coach } });
-      if (user.solicitud === SolicitudState.PENDING) {
-        await this.userRepository.update(coach, {
-          solicitud: SolicitudState.ACCEPTED,
-          role: UserRole.ENTRENADOR,
-        });
-        await this.mailerService.notificarRegistro(
-          user.email,
-          'Solicitud aceptada',
-          'Tu solicitud ha sido aceptada, bienvenido a FitHub',
-        );
-        return 'Solicitud aceptada';
-      }
-      if (user.solicitud === SolicitudState.DENIED) {
-        throw new BadRequestException(
-          'Ya tienes una solicitud denegada, comunicarte con la administracion',
-        );
-      }
-      throw new BadRequestException('No hay solicitudes pendientes');
-    } else if (plan) {
-      const planSol = await this.planRepository.findOne({
-        where: { id: plan },
-        relations: ['admin'],
-      });
-      if (planSol.check === SolicitudState.PENDING) {
-        await this.planRepository.update(plan, {
-          check: SolicitudState.ACCEPTED,
-        });
-        await this.mailerService.notificarRegistro(
-          planSol.admin.email,
-          'Solicitud aceptada',
-          'Tu solicitud ha sido aceptada, tu plan de entrenamineto ya se encuentra activo en FitHub',
-        );
-        return 'Solicitud aceptada';
-      } else if (planSol.check === SolicitudState.DENIED) {
-        throw new BadRequestException(
-          'Ya tienes una solicitud denegada, comunicarte con la administracion',
-        );
-      }
-    } else if (rutina) {
-      const rutinaSol = await this.rutinaRepository.findOne({
-        where: { id: rutina },
-        relations: ['admin'],
-      });
-      if (rutinaSol.check === SolicitudState.PENDING) {
-        await this.rutinaRepository.update(rutina, {
-          check: SolicitudState.ACCEPTED,
-        });
-        await this.mailerService.notificarRegistro(
-          rutinaSol.admin.email,
-          'Solicitud aceptada',
-          'Tu solicitud ha sido aceptada, tu rutina ya se encuentra activa en FitHub',
-        );
-        return 'Solicitud aceptada';
-      } else if (rutinaSol.check === SolicitudState.DENIED) {
-        throw new BadRequestException(
-          'Ya tienes una solicitud denegada, comunicarte con la administracion',
-        );
-      }
 
     async aceptarSolicitud(id:string, coach?:string, plan?:string, rutina?:string) {
         if (coach){
@@ -151,7 +55,6 @@ async solicitudPending(id: string) {
             } else if (rutinaSol.check === SolicitudState.DENIED) {
                 throw new BadRequestException('Ya tienes una solicitud denegada, comunicarte con la administracion');
         }
-
     }
 }
 
@@ -232,24 +135,3 @@ async solicitudPending(id: string) {
     }
 }
 
-//  if (coach) {
-//   const user = await this.userRepository.findOne({ where: { id: coach } });
-//   if (user.solicitud === SolicitudState.ACCEPTED) {
-//     throw new AlreadyAcceptedException('el usuario');
-//   }
-//   if (user.solicitud === SolicitudState.DENIED) {
-//     throw new AlreadyDeniedException('el usuario');
-//   }
-//   if (user.solicitud === SolicitudState.PENDING) {
-//     await this.userRepository.update(coach, {
-//       solicitud: SolicitudState.ACCEPTED,
-//       role: UserRole.ENTRENADOR,
-//     });
-//     await this.mailerService.notificarRegistro(
-//       user.email,
-//       'Solicitud aceptada',
-//       'Tu solicitud ha sido aceptada, bienvenido a FitHub',
-//     );
-//     return 'Solicitud aceptada';
-//   }
-// }
