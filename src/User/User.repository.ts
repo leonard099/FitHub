@@ -30,6 +30,7 @@ export class UsersRepository {
     const allCoach = await this.userRepository.find({
       where: { role:UserRole.ENTRENADOR, isActive: true },
     });
+    
     return allCoach;
   }
 
