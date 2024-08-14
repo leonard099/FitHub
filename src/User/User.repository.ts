@@ -16,7 +16,6 @@ export class UsersRepository {
     return allUsers;
   }
 
-
   async getUserById(id: string) {
     return await this.userRepository.findOne({
       where: {
@@ -25,16 +24,16 @@ export class UsersRepository {
       },
       relations: ['routine', 'subsciption.plan'],
     });
+  }
 
   async getCoach() {
     const allCoach = await this.userRepository.find({
-      where: { role:UserRole.ENTRENADOR, isActive: true },
+      where: { role: UserRole.ENTRENADOR, isActive: true },
     });
-    
+
     return allCoach;
   }
 
-  
   async getUserByIdPyR(id) {
     const userRyP = await this.userRepository.findOne({
       where: { id, isActive: true },
