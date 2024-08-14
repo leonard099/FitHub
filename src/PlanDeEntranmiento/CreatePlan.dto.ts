@@ -109,6 +109,22 @@ export class PlanUpdateDto {
   @IsNotEmpty()
   location: string;
 
+  @IsNumber()
+  @IsOptional()
+  latitude?: number;
+
+  @IsNumber()
+  @IsOptional()
+  longitude?: number;
+
+  @IsNumber()
+  @IsOptional()
+  price?: number;
+
+  @IsString()
+  @IsOptional()
+  imgUrl?: string;
+
   /**
    * Nivel de dificultad del plan (opcional)
    * @example "Advanced"
