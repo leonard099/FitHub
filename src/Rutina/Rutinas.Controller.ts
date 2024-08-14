@@ -32,6 +32,8 @@ import { AuthGuard } from 'src/Guard/AuthGuar.guard';
 import MercadoPagoConfig from 'mercadopago';
 import { Request, Response } from 'express';
 import { FilesInterceptor } from '@nestjs/platform-express';
+import { Roles, UserRole } from 'src/User/User.enum';
+import { RolesGuard } from 'src/Guard/roles.guard';
 @ApiTags('Rutina')
 @Controller('rutina')
 export class RutinaController {
@@ -62,21 +64,26 @@ export class RutinaController {
   }
 
   @Post()
-  @UseGuards(AuthGuard)
+  @Roles(UserRole.ADMIN, UserRole.SUPERADMIN, UserRole.ENTRENADOR)
+  @UseGuards(AuthGuard, RolesGuard)
   async createRutina(@Req() req, @Body() rutina: CreateRutinaDto) {
+
     const userId = req.user.sub;
     return await this.rutinaService.createRutina(rutina, userId);
   }
 
   @Post('create-order')
-  @UseGuards(AuthGuard)
+  @Roles(UserRole.ADMIN, UserRole.SUPERADMIN, UserRole.ENTRENADOR, UserRole.USER)
+  @UseGuards(AuthGuard, RolesGuard)
+
   async createOrder(@Req() req, @Res() res: Response) {
     const result = await this.rutinaService.createOrderRoutine(req, res);
     return result;
   }
 
   @Put(':id')
-  @UseGuards(AuthGuard)
+  @Roles(UserRole.ADMIN, UserRole.SUPERADMIN, UserRole.ENTRENADOR)
+  @UseGuards(AuthGuard, RolesGuard)
   async updateRutina(
     @Req() req,
     @Body() rutina: UpdateRutinaDto,
@@ -87,7 +94,8 @@ export class RutinaController {
   }
 
   @Delete(':id')
-  @UseGuards(AuthGuard)
+  @Roles(UserRole.ADMIN, UserRole.SUPERADMIN, UserRole.ENTRENADOR)
+  @UseGuards(AuthGuard, RolesGuard)
   async deleteRutina(@Req() req, @Param('id') id: UUID) {
     const user = req.user;
     return await this.rutinaService.deleteRutina(id, user);

@@ -29,6 +29,8 @@ import { AuthGuard } from 'src/Guard/AuthGuar.guard';
 import { Console } from 'console';
 import * as mercadopago from 'mercadopago';
 import { FilesInterceptor } from '@nestjs/platform-express';
+import { Roles, UserRole } from 'src/User/User.enum';
+import { RolesGuard } from 'src/Guard/roles.guard';
 @ApiTags('Planes de Entrenamiento')
 @Controller('plan')
 export class PlanController {
@@ -59,7 +61,8 @@ export class PlanController {
   }
 
   @Post()
-  @UseGuards(AuthGuard)
+  @Roles(UserRole.ADMIN, UserRole.SUPERADMIN, UserRole.ENTRENADOR)
+  @UseGuards(AuthGuard, RolesGuard)
   async createPlan(@Req() req, @Body() plan: PlanCreateDto) {
     const user = req.user;
     const admin = user.sub;
@@ -67,14 +70,16 @@ export class PlanController {
   }
 
   @Post('create-order')
-  @UseGuards(AuthGuard)
-  async createSubscription(@Req() req, @Res() res) {
+  @Roles(UserRole.ADMIN, UserRole.SUPERADMIN, UserRole.ENTRENADOR, UserRole.USER)
+  @UseGuards(AuthGuard, RolesGuard)
+  async createSubscription(@Req() req: Request, @Res() res) {
     const result = await this.planService.createSubscription(req, res);
     return result;
   }
 
   @Put(':id')
-  @UseGuards(AuthGuard)
+  @Roles(UserRole.ADMIN, UserRole.SUPERADMIN, UserRole.ENTRENADOR)
+  @UseGuards(AuthGuard, RolesGuard)
   async updatePlan(
     @Req() req,
     @Body() plan: PlanUpdateDto,
@@ -87,7 +92,8 @@ export class PlanController {
   }
 
   @Delete(':id')
-  @UseGuards(AuthGuard)
+  @Roles(UserRole.ADMIN, UserRole.SUPERADMIN, UserRole.ENTRENADOR)
+  @UseGuards(AuthGuard, RolesGuard)
   async deletePlan(@Req() req, @Param('id') id: UUID) {
     const user = req.user;
     return await this.planService.deletePlan(id, user);

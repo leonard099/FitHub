@@ -16,6 +16,7 @@ import { PlanCreateDto } from './CreatePlan.dto';
 import { Users } from 'src/User/User.entity';
 import { UserRole } from 'src/User/User.enum';
 import { Payment, Preference } from 'mercadopago';
+import { SolicitudState, UserRole } from 'src/User/User.enum';
 import { Suscripciones } from 'src/Suscripciones/Suscripciones.entity';
 import { SubscriptionsRepository } from 'src/Suscripciones/suscripciones.repository';
 import { planClient } from 'config/mercadoPagoPlan.config';
@@ -130,7 +131,7 @@ export class PlanRepository {
         await this.planRepository.save(planToUpdate);
       }
       const { categoryToUpdate, ...planSinCategory } = plan;
-      console.log(planSinCategory);
+      planSinCategory.check = SolicitudState.PENDING;
       return await this.planRepository.update(identificacion, planSinCategory);
     } else if (userAdmin.role === UserRole.ADMIN) {
       const planToUpdate = await this.planRepository.findOne({

@@ -3,7 +3,7 @@ import { Repository } from 'typeorm';
 import { Users } from './User.entity';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateUserDto, UpdateUserDto } from './CreateUser.Dto';
-import { SolicitudState } from './User.enum';
+import { SolicitudState, UserRole } from './User.enum';
 
 @Injectable()
 export class UsersRepository {
@@ -12,11 +12,10 @@ export class UsersRepository {
   ) {}
 
   async getAllUsers() {
-    const allUsers = await this.userRepository.find({
-      where: { isActive: true },
-    });
+    const allUsers = await this.userRepository.find();
     return allUsers;
   }
+
 
   async getUserById(id: string) {
     return await this.userRepository.findOne({
@@ -26,7 +25,15 @@ export class UsersRepository {
       },
       relations: ['routine', 'subsciption.plan'],
     });
+
+  async getCoach() {
+    const allCoach = await this.userRepository.find({
+      where: { role:UserRole.ENTRENADOR, isActive: true },
+    });
+    return allCoach;
   }
+
+  
   async getUserByIdPyR(id) {
     const userRyP = await this.userRepository.findOne({
       where: { id, isActive: true },
