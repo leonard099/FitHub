@@ -50,7 +50,7 @@ export class RutinaService {
   async createRutina(rutina: CreateRutinaDto, userId: string) {
     return await this.rutinasRepository.createRutina(rutina, userId);
   }
-  async createOrderRoutine(req: Request, res: Response) {
+  async createOrderRoutine(req, res: Response) {
     const ordenCreada = await this.rutinasRepository.createOrderRoutine(
       req,
       res,
