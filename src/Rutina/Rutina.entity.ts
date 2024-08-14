@@ -70,6 +70,6 @@ export class Rutina {
   @Column({ default: true })
   isActive: boolean;
 
-  @OneToOne(() => Recibo, (recibo) => recibo.rutina)
-  recibo: Recibo;
+  @ManyToOne(() => Recibo, (recibo) => recibo.rutinas)
+  recibo: Recibo[];
 }

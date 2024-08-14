@@ -9,6 +9,16 @@ import { Repository } from 'typeorm';
 import { FilesUploadRepository } from './files-upload.repository';
 import { Rutina } from 'src/Rutina/Rutina.entity';
 import { Users } from 'src/User/User.entity';
+import {
+  ActualizacionEjercicioFallidaException,
+  ActualizacionRutinaFallidaException,
+  ActualizacionUsuarioFallidaException,
+  ArchivosNoSubidosException,
+  EjercicioNoEncontradoException,
+  FormatoNoPermitidoException,
+  RutinaNoEncontradaException,
+  UsuarioNoEncontradoException,
+} from 'src/Exceptions/Files.exceptions';
 
 @Injectable()
 export class FilesUploadService {
@@ -31,14 +41,14 @@ export class FilesUploadService {
       id: ejercicioId,
     });
     if (!ejercicio) {
-      throw new NotFoundException('Ejercicio no encontrado');
+      throw new EjercicioNoEncontradoException();
     }
     const uploadResults = await this.filesUploadRepository.uploadFiles(
       files,
       resourceType,
     );
     if (uploadResults.length === 0) {
-      throw new NotFoundException('No se pudieron cargar los archivos');
+      throw new ArchivosNoSubidosException();
     }
     const fileUrls = uploadResults.map((result) => result.secure_url);
     await this.ejerciciosRepository.update(ejercicioId, {
@@ -48,9 +58,7 @@ export class FilesUploadService {
       id: ejercicioId,
     });
     if (!updatedEjercicio) {
-      throw new NotFoundException(
-        'No se pudo actualizar la información del ejercicio',
-      );
+      throw new ActualizacionEjercicioFallidaException();
     }
     return updatedEjercicio;
   }
@@ -62,14 +70,14 @@ export class FilesUploadService {
   ) {
     const rutina = await this.rutinaRepository.findOneBy({ id: rutinaId });
     if (!rutina) {
-      throw new NotFoundException('Ejercicio no encontrado');
+      throw new RutinaNoEncontradaException();
     }
     const uploadResults = await this.filesUploadRepository.uploadFiles(
       files,
       resourceType,
     );
     if (uploadResults.length === 0) {
-      throw new NotFoundException('No se pudieron cargar los archivos');
+      throw new ArchivosNoSubidosException();
     }
     const fileUrls = uploadResults.map((result) => result.secure_url);
     await this.rutinaRepository.update(rutinaId, {
@@ -79,9 +87,7 @@ export class FilesUploadService {
       id: rutinaId,
     });
     if (!updatedRutina) {
-      throw new NotFoundException(
-        'No se pudo actualizar la información del ejercicio',
-      );
+      throw new ActualizacionRutinaFallidaException();
     }
     return updatedRutina;
   }
@@ -96,7 +102,7 @@ export class FilesUploadService {
       resourceType,
     );
     if (uploadResults.length === 0) {
-      throw new NotFoundException('No se pudieron cargar los archivos');
+      throw new ArchivosNoSubidosException();
     }
     const fileUrls = uploadResults.map((result) => result.secure_url);
     return fileUrls;
@@ -105,9 +111,7 @@ export class FilesUploadService {
   async uploadPdfFiles(files: Express.Multer.File[]) {
     files.forEach((file) => {
       if (file.mimetype !== 'application/pdf') {
-        throw new BadRequestException(
-          'Solo se permiten archivos en formato PDF',
-        );
+        throw new FormatoNoPermitidoException();
       }
     });
 
@@ -115,7 +119,7 @@ export class FilesUploadService {
       await this.filesUploadRepository.uploadPdfFiles(files);
 
     if (uploadResults.length === 0) {
-      throw new NotFoundException('No se pudieron cargar los archivos');
+      throw new ArchivosNoSubidosException();
     }
 
     const fileUrls = uploadResults.map((result) => result.secure_url);
@@ -132,12 +136,24 @@ export class FilesUploadService {
       resourceType,
     );
     if (uploadResults.length === 0) {
-      throw new NotFoundException('No se pudieron cargar los archivos');
+      throw new ArchivosNoSubidosException();
     }
     const imgUrl = uploadResults[0].secure_url;
 
-    const updateUser = await this.usersRepository.update(userId, { imgUrl });
+    const userUpdateResult = await this.usersRepository.update(userId, {
+      imgUrl,
+    });
 
-    return await this.usersRepository.findOne({ where: { id: userId } });
+    if (!userUpdateResult.affected) {
+      throw new ActualizacionUsuarioFallidaException();
+    }
+
+    const updatedUser = await this.usersRepository.findOne({
+      where: { id: userId },
+    });
+    if (!updatedUser) {
+      throw new UsuarioNoEncontradoException();
+    }
+    return updatedUser;
   }
 }

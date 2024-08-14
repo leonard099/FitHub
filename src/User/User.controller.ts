@@ -56,14 +56,15 @@ export class UserController {
   getEntrenadorByIdPyR(@Req() req, @Param('id') id: string) {
     const user = req.user;
     const idUser = user.sub;
+
     return this.userService.getEntrenadorByIdPyR(id, idUser);
   }
 
   @Post('solictud')
   @UseGuards(AuthGuard)
-  solicitudCoach(@Req() req,@Body() body: solicitudCoachDto){
+  solicitudCoach(@Req() req, @Body() body: solicitudCoachDto) {
     const userId = req.user.sub;
-    return this.userService.solicitudCoach(userId,body);
+    return this.userService.solicitudCoach(userId, body);
   }
   @Put()
   updateUser(@Body() user: UpdateUserDto, @Param('id') id: string) {

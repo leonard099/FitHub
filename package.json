@@ -38,6 +38,7 @@
     "@types/serve-static": "^1.15.7",
     "@types/stream-buffers": "^3.0.7",
     "@types/superagent": "^8.1.7",
+    "axios": "^1.7.3",
     "bcrypt": "^5.1.1",
     "buffer": "^6.0.3",
     "buffer-to-stream": "^1.0.0",

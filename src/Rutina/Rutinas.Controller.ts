@@ -67,16 +67,17 @@ export class RutinaController {
   @Roles(UserRole.ADMIN, UserRole.SUPERADMIN, UserRole.ENTRENADOR)
   @UseGuards(AuthGuard, RolesGuard)
   async createRutina(@Req() req, @Body() rutina: CreateRutinaDto) {
-    const userId = req.user.sub
+
+    const userId = req.user.sub;
     return await this.rutinaService.createRutina(rutina, userId);
   }
 
   @Post('create-order')
   @Roles(UserRole.ADMIN, UserRole.SUPERADMIN, UserRole.ENTRENADOR, UserRole.USER)
   @UseGuards(AuthGuard, RolesGuard)
+
   async createOrder(@Req() req, @Res() res: Response) {
     const result = await this.rutinaService.createOrderRoutine(req, res);
-    console.log(req.body);
     return result;
   }
 

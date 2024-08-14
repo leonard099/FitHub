@@ -13,6 +13,12 @@ import { UserRole } from 'src/User/User.enum';
 import { loginAuthDto } from './Login.Dto';
 import { PasswordService } from './Auth.randonPass';
 import { MailerService } from 'src/mailer/mailer.service';
+import {
+  AuthException,
+  InvalidCredentialsException,
+  PasswordMismatchException,
+  UserAlreadyExistsException,
+} from 'src/Exceptions/Auth.exceptions';
 
 @Injectable()
 export class AuthRepository {
@@ -28,13 +34,13 @@ export class AuthRepository {
     });
 
     if (!user) {
-      throw new NotFoundException('Email o password incorrectos');
+      throw new InvalidCredentialsException();
     }
 
     const validarPass = await bcrypt.compare(password, user.password);
 
     if (!validarPass) {
-      throw new NotFoundException('Email o password incorrectos');
+      throw new InvalidCredentialsException();
     }
 
     const payload = { email: user.email, sub: user.id, role: user.role };
@@ -51,10 +57,11 @@ export class AuthRepository {
       where: { email: body.email },
     });
     if (usuario) {
-      throw new BadRequestException('El usuario ya existe');
+      throw new UserAlreadyExistsException();
     }
+
     if (body.password !== body.passwordConfirm) {
-      throw new BadRequestException('Las contraseñas no coinciden');
+      throw new PasswordMismatchException();
     }
     const passHash = await bcrypt.hash(body.password, 10);
     body.password = passHash;
@@ -81,6 +88,11 @@ export class AuthRepository {
       email,
       password: hassPass,
     });
+
+    if (!newUser) {
+      throw new AuthException('No se pudo crear el nuevo usuario');
+    }
+
     if (newUser) {
       const to = email;
       const subject = 'Bienvenido/a a FitHub - Tu entrenador personalizado';
@@ -103,10 +115,11 @@ export class AuthRepository {
       where: { email: body.email },
     });
     if (usuario) {
-      throw new BadRequestException('El usuario ya existe');
+      throw new UserAlreadyExistsException();
     }
+
     if (body.password !== body.passwordConfirm) {
-      throw new BadRequestException('Las contraseñas no coinciden');
+      throw new PasswordMismatchException();
     }
     const passHash = await bcrypt.hash(body.password, 10);
 

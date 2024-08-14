@@ -5,7 +5,6 @@ import { Plan } from "src/PlanDeEntranmiento/Plan.entity";
 import { Rutina } from "src/Rutina/Rutina.entity";
 import { Users } from "src/User/User.entity";
 import { SolicitudState, UserRole } from "src/User/User.enum";
-import { UsersRepository } from "src/User/User.repository";
 import { Repository } from "typeorm";
 
 @Injectable()
