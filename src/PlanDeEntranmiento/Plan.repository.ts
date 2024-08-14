@@ -15,11 +15,12 @@ import { DifficultyLevel } from './difficultyLevel.enum';
 import { PlanCreateDto } from './CreatePlan.dto';
 import { Users } from 'src/User/User.entity';
 import { UserRole } from 'src/User/User.enum';
-import { Preference } from 'mercadopago';
+import { Payment, Preference } from 'mercadopago';
 import { Suscripciones } from 'src/Suscripciones/Suscripciones.entity';
 import { SubscriptionsRepository } from 'src/Suscripciones/suscripciones.repository';
 import { planClient } from 'config/mercadoPagoPlan.config';
 import { Request, Response, response } from 'express';
+import axios from 'axios';
 
 @Injectable()
 export class PlanRepository {
@@ -183,7 +184,7 @@ export class PlanRepository {
 
   // REVISAR EL CHEQUEO DE SI YA EXISTE EL PLAN DENTRO DEL USER. ASI NO COMPRADOS VECES. REVISAR EL INVOICE DE CADUCIDAD
   async createOrderPlan(req, res) {
-    const userId = req.body.id;
+    const userId = req.user.sub;
     const planId = req.body.planId;
     // const planYaComprado = await this.planRepository.findOne({
     //   where: { id: planId },
@@ -193,15 +194,15 @@ export class PlanRepository {
     // }
     console.log(userId, planId);
     try {
-      const existingSubscription =
-        await this.subscriptionsRepository.getSubscriptionByUserAndPlan(
-          userId,
-          planId,
-        );
+      // const existingSubscription =
+      //   await this.subscriptionsRepository.getSubscriptionByUserAndPlan(
+      //     userId,
+      //     planId,
+      //   );
 
-      if (existingSubscription) {
-        throw new BadRequestException('Su suscripción aún no se ha vencido');
-      }
+      // if (existingSubscription) {
+      //   throw new BadRequestException('Su suscripción aún no se ha vencido');
+      // }
 
       const user = await this.userRepository.findOne({
         where: { id: userId, isActive: true },
@@ -220,7 +221,7 @@ export class PlanRepository {
       const body = {
         items: [
           {
-            id: req.body.id,
+            id: req.user.sub,
             title: req.body.title,
             planId: req.body.planId,
             quantity: 1,
@@ -229,21 +230,45 @@ export class PlanRepository {
           },
         ],
         back_urls: {
-          success: 'http://localhost:3000/mercadoPago/success',
-          failure: 'http://localhost:3000/mercadoPago/failure',
+          success: 'http://localhost:3000/success',
+          failure: 'http://localhost:3000/failure',
         },
         auto_return: 'approved',
+        notification_url: 'https://fithub-2mzr.onrender.com/plan/webhook',
       };
 
       const preference = new Preference(planClient);
-      const result = await preference.create({ body });
-      res.json({ id: result.id });
+      const result = await preference.create({ body }); 
+      const paymentId = result.id;
+      
 
-      this.handlePaymentSuccess(userId, planId);
-    } catch (error) {
-      console.error('Error al crear la preferencia de pago:', error);
-      res.status(500).send('Error al crear la preferencia de pago');
-    }
+    // Devuelve la preferencia creada al frontend para que se pueda redirigir a la URL de MercadoPago
+    res.json({ id: result.id, init_point: result.init_point });
+  } catch (error) {
+    console.error('Error al crear la preferencia de pago:', error);
+    res.status(500).send('Error al crear la preferencia de pago');
+  }
+
+      //aca es donde deberiamos cortar el metodo, enviar el res.json y que desde el webhook continuar con la suscripcion si es que el estado es exitoso
+      // this.handlePaymentSuccess(userId, planId);
+      // try {
+      //   const response = await axios.get(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
+      //     headers: {
+      //       'Authorization': `Bearer APP_USR-6795275057660122-073011-154dfa6cc6845f14ff72ae59d7723aa8-1289604664`,
+      //     }
+      //   });
+    
+      //   // Aquí puedes manejar la respuesta de la API
+      //   console.log('Payment Status:', response.data.status);
+      //   res.json({ id: result.id });
+      // } catch (error) {
+      //   console.error('Error fetching payment status:', error.response ? error.response.data : error.message);
+      //   throw new Error('Error fetching payment status');
+      // }
+    // } catch (error) {
+    //   console.error('Error al crear la preferencia de pago:', error);
+    //   res.status(500).send('Error al crear la preferencia de pago');
+    // }
   }
 
   async handlePaymentSuccess(userId: string, planId: string) {
@@ -251,6 +276,26 @@ export class PlanRepository {
       await this.subscriptionsRepository.createSubscription(userId, planId);
     } catch (error) {
       console.error('Error al crear la suscripción:', error);
+    }
+  }
+
+  async webhook(req, res){
+    const paymentId = req.body.data.id;
+
+    try {
+      const payment = await axios.get(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
+        headers: {
+          Authorization: `Bearer APP_USR-6795275057660122-073011-154dfa6cc6845f14ff72ae59d7723aa8-1289604664`, // Asegúrate de usar el token correcto
+        },
+      });
+
+      if (payment.data.status === 'approved') {
+        console.log('estoy probando la entrada por la ruta')
+      }
+      res.sendStatus(200);
+    } catch (error) {
+      console.error('Error in MercadoPago Webhook:', error);
+      res.sendStatus(500);
     }
   }
 }

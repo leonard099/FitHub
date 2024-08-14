@@ -92,4 +92,9 @@ export class PlanController {
     const user = req.user;
     return await this.planService.deletePlan(id, user);
   }
+
+  @Post('webhook')
+  async webhook(@Req() req, @Res() res) {
+    return await this.planService.webhook(req, res);
+  }
 }

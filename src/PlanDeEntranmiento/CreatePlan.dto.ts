@@ -65,7 +65,7 @@ export class PlanCreateDto {
   @IsNumber()
   price: number;
 
-  @IsArray()
+  @IsString()
   @IsOptional()
   imgUrl: string;
 }
