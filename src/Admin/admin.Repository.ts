@@ -22,9 +22,7 @@ export class AdminRepository {
         const coachs = await this.userRepository.find({where:{solicitud:SolicitudState.PENDING}});
         const planes = await this.planRepository.find({where:{check:SolicitudState.PENDING}, relations:['admin','category']});
         const rutinas = await this.rutinaRepository.find({where:{check:SolicitudState.PENDING},relations:['admin','category','exercise']});
-
-        return {coachs, planes, rutinas};
-        
+        return {coachs, planes, rutinas}   
     }
 
     async aceptarSolicitud(id:string, coach?:string, plan?:string, rutina?:string) {
