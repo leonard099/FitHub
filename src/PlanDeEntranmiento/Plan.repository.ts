@@ -14,7 +14,6 @@ import { Category } from 'src/Category/Category.entity';
 import { DifficultyLevel } from './difficultyLevel.enum';
 import { PlanCreateDto } from './CreatePlan.dto';
 import { Users } from 'src/User/User.entity';
-import { UserRole } from 'src/User/User.enum';
 import { Payment, Preference } from 'mercadopago';
 import { SolicitudState, UserRole } from 'src/User/User.enum';
 import { Suscripciones } from 'src/Suscripciones/Suscripciones.entity';
@@ -223,7 +222,7 @@ export class PlanRepository {
       const body = {
         items: [
           {
-            id: req.user.sub,
+            id: req.body.sub,
             title: req.body.title,
             planId: req.body.planId,
             quantity: 1,
