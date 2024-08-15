@@ -250,8 +250,8 @@ export class RutinaRepository {
           },
         ],
         back_urls: {
-          success: 'http://localhost:3000/mercadoPagoRutina/success',
-          failure: 'http://localhost:3000/mercadoPagoRutina/failure',
+          success: 'https://fit-hub-front-end.vercel.app/mercadoPagoRutina/success',
+          failure: 'https://fit-hub-front-end.vercel.app/mercadoPagoRutina/failure',
         },
         auto_return: 'approved',
       };
