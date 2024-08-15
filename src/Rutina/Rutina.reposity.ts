@@ -1,5 +1,3 @@
-/* eslint-disable prettier/prettier */
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { InjectRepository } from '@nestjs/typeorm';
 import { Rutina } from './Rutina.entity';
 import { ILike, In, Repository } from 'typeorm';
@@ -24,10 +22,12 @@ import { CreateReciboDto } from 'src/Recibo/createRecibo.dto';
 import { Request, Response } from 'express';
 import { StateRecibo } from 'src/Recibo/recibo.enum';
 import axios from 'axios';
+import { Pago } from 'src/Pagos/Pagos.entity';
 
 @Injectable()
 export class RutinaRepository {
   constructor(
+    @InjectRepository(Pago) private pagoRepository: Repository<Pago>,
     @InjectRepository(Rutina)
     private readonly rutinaRepository: Repository<Rutina>,
     @InjectRepository(Category)
@@ -159,11 +159,13 @@ export class RutinaRepository {
       const { category, ...rutinaSinCategory } = rutinaToUpdate;
       rutinaSinCategory.check = SolicitudState.PENDING;
       return await this.rutinaRepository.update(id, rutinaSinCategory);
-      
     }
   }
   async deleteRutina(id, user) {
-    const rutina = await this.rutinaRepository.findOne({ where: { id }, relations: ['admin'] });
+    const rutina = await this.rutinaRepository.findOne({
+      where: { id },
+      relations: ['admin'],
+    });
 
     if (!rutina || rutina.isActive === false) {
       throw new NotFoundException('Rutina no encontrada o eliminada');
@@ -188,9 +190,7 @@ export class RutinaRepository {
 
   ////////////////////////////////Mercado Pago///////////////////////////////////////////
 
-
   async createOrderRoutine(req, res) {
-
     const userId = req.user.sub;
     const rutinaId = req.body.rutinaId;
 
@@ -203,11 +203,11 @@ export class RutinaRepository {
       if (!user) {
         throw new ConflictException('Usuario no encontrado');
       }
-      // if (user.routine.some((r) => r.id === rutinaId)) {
-      //   throw new BadRequestException(
-      //     'Usted ya ha comprado anteriormente esta rutina',
-      //   );
-      // }
+      if (user.routine.some((r) => r.id === rutinaId)) {
+        throw new BadRequestException(
+          'Usted ya ha comprado anteriormente esta rutina',
+        );
+      }
       const rutina = await this.rutinaRepository.findOne({
         where: { id: rutinaId },
       });
@@ -218,7 +218,7 @@ export class RutinaRepository {
       const body = {
         items: [
           {
-            id: req.user.sub,
+            id: req.body.id,
             title: req.body.title,
             rutinaId: req.body.rutinaId,
             quantity: 1,
@@ -227,132 +227,67 @@ export class RutinaRepository {
           },
         ],
         back_urls: {
-          success: 'http://localhost:3000/mercadoPago/success',
-          failure: 'http://localhost:3000/mercadoPago/failure',
+          success: 'http://localhost:3000/mercadoPagoRutina/success',
+          failure: 'http://localhost:3000/mercadoPagoRutina/failure',
         },
         auto_return: 'approved',
       };
 
       const preference = new Preference(client);
       const result = await preference.create({ body });
-      res.json({
-        result,
+
+      this.pagoRepository.save({
+        preferenceId: result.id,
+        idUsuario: userId,
+        idPago: req.body.rutinaId,
       });
-      
-      console.log(result);
 
-      
-      user.routine.push(rutina);
-      await this.userRepository.save(user);
-
-      const reciboData = {
-        user,
-        rutinas: [rutina],
-        planes: [],
-        price: Number(req.body.unit_price),
-        state: StateRecibo.PAGADO,
-      };
-
-      const reciboGuardado = await this.reciboService.createRecibo(reciboData);
-
-      return result;
+      res.json({ id: result.id });
     } catch (error) {
       console.error(error);
       res.status(400).send('Error al crear la preferencia de pago');
     }
   }
+
+  async webhook(data, userId) {
+    const preferencia = await this.pagoRepository.findOne({
+      where: { preferenceId: data.preference_id },
+    });
+    const rutinaId = preferencia.idPago;
+    if (!rutinaId) {
+      throw new BadRequestException('no entro');
+    }
+    const status = data.status;
+    if (status === 'approved') {
+      const compradorUser = await this.userRepository.findOne({
+        where: { id: userId },
+        relations: ['routine'],
+      });
+      if (!compradorUser) {
+        throw new ConflictException('Usuario no encontrado');
+      }
+
+      const rutina = await this.rutinaRepository.findOne({
+        where: { id: rutinaId },
+      });
+      if (!rutina) {
+        throw new ConflictException('Usuario no encontrado');
+      }
+
+      compradorUser.routine.push(rutina);
+      await this.userRepository.save(compradorUser);
+
+      const reciboData = {
+        user: compradorUser,
+        rutinas: [rutina],
+        planes: [],
+        price: null,
+        state: StateRecibo.PAGADO,
+      };
+
+      const reciboGuardado = await this.reciboService.createRecibo(reciboData);
+      return 'recibo realizado, compra finalizada';
+    }
+    return 'no se pudo realizar la compra';
+  }
 }
-
-
-
-
-// async createOrderRoutine(req, res) {
-//   const userId = req.user.sub;
-//   const rutinaId = req.body.rutinaId;
-
-//   try {
-//     const user = await this.userRepository.findOne({
-//       where: { id: userId, isActive: true },
-//       relations: ['routine'],
-//     });
-
-//     if (!user) {
-//       throw new ConflictException('Usuario no encontrado');
-//     }
-
-//     const rutina = await this.rutinaRepository.findOne({
-//       where: { id: rutinaId },
-//     });
-//     if (!rutina) {
-//       throw new ConflictException('Rutina no encontrada');
-//     }
-
-//     const body = {
-//       items: [
-//         {
-//           id: req.user.sub,
-//           title: req.body.title,
-//           rutinaId: req.body.rutinaId,
-//           quantity: 1,
-//           unit_price: Number(req.body.unit_price),
-//           currency_id: 'ARS',
-//         },
-//       ],
-//       back_urls: {
-//         success: 'http://localhost:3000/mercadoPago/success',
-//         failure: 'http://localhost:3000/mercadoPago/failure',
-//       },
-//       notification_url: 'http://localhost:3000/mercadoPago/notification', // URL para recibir la notificación de MercadoPago
-//       auto_return: 'approved',
-//     };
-
-//     const preference = new Preference(client);
-//     const result = await preference.create({ body });
-//     res.json({
-//       init_point: result.body.init_point, // Enviar el init_point al frontend para redirigir al usuario
-//     });
-
-//     // Aquí no hacemos el push ni creamos el recibo aún
-
-//     // La notificación será manejada en otra parte, donde verificas el estado del pago y procedes.
-    
-//   } catch (error) {
-//     console.error(error);
-//     res.status(400).send('Error al crear la preferencia de pago');
-//   }
-// }
-
-// // Otro endpoint para manejar la notificación
-// async handleNotification(req, res) {
-//   const paymentId = req.body.data.id; // o req.query.id dependiendo de cómo recibas los datos
-
-//   try {
-//     const payment = await axios.get(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
-//       headers: {
-//         'Authorization': `Bearer YOUR_ACCESS_TOKEN`,
-//       }
-//     });
-
-//     if (payment.data.status === 'approved') {
-//       // Asociar la rutina al usuario
-//       user.routine.push(rutina);
-//       await this.userRepository.save(user);
-
-//       // Crear el recibo
-//       const reciboData = {
-//         user,
-//         rutinas: [rutina],
-//         planes: [],
-//         price: Number(req.body.unit_price),
-//         state: StateRecibo.PAGADO,
-//       };
-
-//       const reciboGuardado = await this.reciboService.createRecibo(reciboData);
-//     }
-
-//     res.status(200).send('Notificación recibida y procesada');
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).send('Error al procesar la notificación de pago');
-//   }
-// }

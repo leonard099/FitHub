@@ -67,15 +67,18 @@ export class RutinaController {
   @Roles(UserRole.ADMIN, UserRole.SUPERADMIN, UserRole.ENTRENADOR)
   @UseGuards(AuthGuard, RolesGuard)
   async createRutina(@Req() req, @Body() rutina: CreateRutinaDto) {
-
     const userId = req.user.sub;
     return await this.rutinaService.createRutina(rutina, userId);
   }
 
   @Post('create-order')
-  @Roles(UserRole.ADMIN, UserRole.SUPERADMIN, UserRole.ENTRENADOR, UserRole.USER)
+  @Roles(
+    UserRole.ADMIN,
+    UserRole.SUPERADMIN,
+    UserRole.ENTRENADOR,
+    UserRole.USER,
+  )
   @UseGuards(AuthGuard, RolesGuard)
-
   async createOrder(@Req() req, @Res() res: Response) {
     const result = await this.rutinaService.createOrderRoutine(req, res);
     return result;
@@ -99,5 +102,13 @@ export class RutinaController {
   async deleteRutina(@Req() req, @Param('id') id: UUID) {
     const user = req.user;
     return await this.rutinaService.deleteRutina(id, user);
+  }
+
+  @Post('webhook')
+  @UseGuards(AuthGuard)
+  async webhook(@Req() req, @Res() res) {
+    const data = req.body;
+    const userId = req.user.sub;
+    return await this.rutinaService.webhook(data, userId);
   }
 }
