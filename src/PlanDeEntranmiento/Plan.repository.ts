@@ -228,8 +228,8 @@ export class PlanRepository {
           },
         ],
         back_urls: {
-          success: 'http://localhost:3000/mercadoPagoPlan/success',
-          failure: 'http://localhost:3000/mercadoPagoPlan/failure',
+          success: 'https://fit-hub-front-end.vercel.app/mercadoPagoPlan/success',
+          failure: 'https://fit-hub-front-end.vercel.app/mercadoPagoPlan/failure',
         },
         auto_return: 'approved',
        
