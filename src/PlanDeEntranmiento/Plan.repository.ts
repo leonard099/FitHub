@@ -218,7 +218,7 @@ export class PlanRepository {
       const body = {
         items: [
           {
-            id: userId,
+            id: req.body.id,
             title: req.body.title,
             planId: req.body.planId,
             quantity: 1,
