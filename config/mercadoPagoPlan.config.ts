@@ -5,5 +5,5 @@ dotenvConfig({ path: '.env' });
 
 export const planClient = new MercadoPagoConfig({
   accessToken:
-    'APP_USR-6795275057660122-073011-154dfa6cc6845f14ff72ae59d7723aa8-1289604664',
+    'APP_USR-8334772278648717-073113-0c8af1ed3bd5215d8c5f32f82d27b5eb-1923718057',
 });
