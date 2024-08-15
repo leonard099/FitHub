@@ -138,8 +138,20 @@ export class RutinaRepository {
         rutinaToUpdate.category = category;
         await this.rutinaRepository.save(rutinaToUpdate);
       }
-      const { category, ...rutinaSinCategory } = rutinaToUpdate;
-      return await this.rutinaRepository.update(id, rutinaToUpdate);
+
+      if(rutina.exercise){
+        const exercise = await this.exerciceRepository.find({
+          where: { id: In(rutina.exercise) },
+        });
+        if (exercise.length !== rutina.exercise.length) {
+          throw new NotFoundException('Ejercicio no encontrado');
+        }
+        rutinaToUpdate.exercise = exercise;
+        await this.rutinaRepository.save(rutinaToUpdate);
+      }
+      const { category, exercise, ...rutinaSinCategory } = rutina;
+
+       await this.rutinaRepository.update(id, rutinaSinCategory);
     } else if (userAdmin.role === UserRole.ADMIN) {
       const rutinaToUpdate = await this.rutinaRepository.findOne({
         where: { id: id },
@@ -155,8 +167,19 @@ export class RutinaRepository {
           throw new NotFoundException('Categoría no encontrada');
         }
         rutinaToUpdate.category = category;
+        await this.rutinaRepository.save(rutinaToUpdate)
       }
-      const { category, ...rutinaSinCategory } = rutinaToUpdate;
+      if(rutina.exercise){
+        const exercise = await this.exerciceRepository.find({
+          where: { id: In(rutina.exercise) },
+        });
+        if (exercise.length !== rutina.exercise.length) {
+          throw new NotFoundException('Ejercicio no encontrado');
+        }
+        rutinaToUpdate.exercise = exercise;
+        await this.rutinaRepository.save(rutinaToUpdate);
+      }
+      const { category, exercise, ...rutinaSinCategory } = rutina;
       rutinaSinCategory.check = SolicitudState.PENDING;
       return await this.rutinaRepository.update(id, rutinaSinCategory);
     }

@@ -39,7 +39,7 @@ export class UserService {
     return this.usersRepository.createUser(user);
   }
 
-  solicitudCoach(userId: string, body: solicitudCoachDto) {
+  solicitudCoach(userId: string, body:solicitudCoachDto) {
     return this.usersRepository.solicitudCoach(userId, body);
   }
 
@@ -55,3 +55,4 @@ export class UserService {
     return await this.usersRepository.getUserByEmail(email);
   }
 }
+

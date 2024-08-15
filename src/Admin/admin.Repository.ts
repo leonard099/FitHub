@@ -252,24 +252,3 @@ export class AdminRepository {
     }
   }
 }
-
-//  if (coach) {
-//   const user = await this.userRepository.findOne({ where: { id: coach } });
-//   if (user.solicitud === SolicitudState.ACCEPTED) {
-//     throw new AlreadyAcceptedException('el usuario');
-//   }
-//   if (user.solicitud === SolicitudState.DENIED) {
-//     throw new AlreadyDeniedException('el usuario');
-//   }
-//   if (user.solicitud === SolicitudState.PENDING) {
-//     await this.userRepository.update(coach, {
-//       solicitud: SolicitudState.ACCEPTED,
-//       role: UserRole.ENTRENADOR,
-//     });
-//     await this.mailerService.notificarRegistro(
-//       user.email,
-//       'Solicitud aceptada',
-//       'Tu solicitud ha sido aceptada, bienvenido a FitHub',
-//     );
-//     return 'Solicitud aceptada';
-//   }

@@ -96,6 +96,10 @@ export class UpdateRutinaDto {
   @IsNotEmpty()
   difficultyLevel?: DifficultyLevel;
 
+  @IsNumber()
+  @IsOptional()
+  price?: number;
+
   @IsArray()
   @IsOptional()
   imgUrl?: string[];
