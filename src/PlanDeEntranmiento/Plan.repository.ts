@@ -21,6 +21,7 @@ import { planClient } from 'config/mercadoPagoPlan.config';
 import { Request, Response, response } from 'express';
 import axios from 'axios';
 import { Pago } from 'src/Pagos/Pagos.entity';
+import { Mutex } from 'async-mutex';
 
 @Injectable()
 export class PlanRepository {
@@ -263,15 +264,23 @@ export class PlanRepository {
     const preferencia = await this.pagoRepository.findOne({
       where: {preferenceId: data.preference_id}
     })
+    console.log(preferencia);
+
     const planId = preferencia.idPago;
     if(!planId){
       throw new BadRequestException('no entro')
     }
     const status = data.status;
-    if (status === 'approved') {
-      this.handlePaymentSuccess(userId, planId);
-      return 'recibo realizado, compra finalizada';
+    if (preferencia.estado===true){
+      // throw new BadRequestException('El usuario ya realizo la compra')
+      if (status === 'approved') {
+        this.handlePaymentSuccess(userId, planId);
+        await this.pagoRepository.update(preferencia.preferenceId, {estado: false});
+        return 'recibo realizado, compra finalizada';
+      }
     }
     return 'no se pudo realizar la compra';
   }
+
+
 }
