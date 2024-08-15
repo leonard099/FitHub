@@ -263,18 +263,20 @@ export class PlanRepository {
     const preferencia = await this.pagoRepository.findOne({
       where: {preferenceId: data.preference_id}
     })
+    console.log(preferencia);
+
     const planId = preferencia.idPago;
     if(!planId){
       throw new BadRequestException('no entro')
     }
     const status = data.status;
-    if (preferencia.estado===false){
-      throw new BadRequestException('El usuario ya realizo la compra')
-    }
-    if (status === 'approved') {
-      this.handlePaymentSuccess(userId, planId);
-      await this.pagoRepository.update(data.preference_id, {estado: false});
-      return 'recibo realizado, compra finalizada';
+    if (preferencia.estado===true){
+      // throw new BadRequestException('El usuario ya realizo la compra')
+      if (status === 'approved') {
+        this.handlePaymentSuccess(userId, planId);
+        await this.pagoRepository.update(preferencia.preferenceId, {estado: false});
+        return 'recibo realizado, compra finalizada';
+      }
     }
     return 'no se pudo realizar la compra';
   }
