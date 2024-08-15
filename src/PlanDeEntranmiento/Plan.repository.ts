@@ -134,7 +134,7 @@ export class PlanRepository {
       const { categoryToUpdate, ...planSinCategory } = plan;
       planSinCategory.check = SolicitudState.PENDING;
       return await this.planRepository.update(identificacion, planSinCategory);
-    } else if (userAdmin.role === UserRole.ADMIN) {
+    } else if (userAdmin.role !== UserRole.ADMIN || userAdmin.role !== UserRole.SUPERADMIN) {
       const planToUpdate = await this.planRepository.findOne({
         where: { id: identificacion },
       });
