@@ -121,7 +121,7 @@ export class RutinaRepository {
     const userAdmin = await this.userRepository.findOne({
       where: { id: user.sub },
     });
-    if (userAdmin.role !== UserRole.ADMIN) {
+    if (userAdmin.role !== UserRole.ADMIN && userAdmin.role !== UserRole.SUPERADMIN) {
       const rutinaToUpdate = await this.rutinaRepository.findOne({
         where: { id: id, admin: userAdmin },
       });
@@ -152,7 +152,7 @@ export class RutinaRepository {
       const { category, exercise, ...rutinaSinCategory } = rutina;
 
       await this.rutinaRepository.update(id, rutinaSinCategory);
-    } else if (userAdmin.role === UserRole.ADMIN) {
+    } else if (userAdmin.role === UserRole.ADMIN || userAdmin.role === userRole.SUPERADMIN) {
       const rutinaToUpdate = await this.rutinaRepository.findOne({
         where: { id: id },
       });
@@ -194,7 +194,7 @@ export class RutinaRepository {
       throw new NotFoundException('Rutina no encontrada o eliminada');
     }
 
-    if (user.role !== UserRole.ADMIN || user.role !== UserRole.SUPERADMIN) {
+    if (userAdmin.role !== UserRole.ADMIN && userAdmin.role !== UserRole.SUPERADMIN) {
       const userSolicitud = await this.userRepository.findOne({
         where: { id: user.sub },
       });
