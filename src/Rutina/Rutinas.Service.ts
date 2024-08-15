@@ -66,4 +66,8 @@ export class RutinaService {
   async deleteRutina(id, user) {
     return await this.rutinasRepository.deleteRutina(id, user);
   }
+
+  async webhook(data, userId) {
+    return await this.rutinasRepository.webhook(data, userId);
+  }
 }

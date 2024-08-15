@@ -188,12 +188,7 @@ export class PlanRepository {
   async createOrderPlan(req, res: Response) {
     const userId = req.body.id;
     const planId = req.body.planId;
-    // const planYaComprado = await this.planRepository.findOne({
-    //   where: { id: planId },
-    // });
-    // if (planYaComprado) {
-    //   throw new BadRequestException('Usted ya posee este plan');
-    // }
+    
     console.log(userId, planId);
     try {
       // const existingSubscription =
@@ -223,7 +218,7 @@ export class PlanRepository {
       const body = {
         items: [
           {
-            id: req.body.sub,
+            id: req.body.id,
             title: req.body.title,
             planId: req.body.planId,
             quantity: 1,
@@ -232,12 +227,11 @@ export class PlanRepository {
           },
         ],
         back_urls: {
-          success: 'http://localhost:3001/plan/webhook',
-          failure: 'http://localhost:3001/plan/webhook',
-          pending: 'http://localhost:3001/plan/webhook',
+          success: 'http://localhost:3000/mercadoPagoPlan/success',
+          failure: 'http://localhost:3000/mercadoPagoPlan/failure',
         },
         auto_return: 'approved',
-        notification_url: 'http://localhost:3001/plan/webhook',
+       
       };
 
       const preference = new Preference(planClient);

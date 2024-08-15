@@ -14,10 +14,18 @@ import { ReciboRepository } from 'src/Recibo/recibo.repository';
 import { UsersRepository } from 'src/User/User.repository';
 import { FilesUploadService } from 'src/files-upload/files-upload.service';
 import { FilesUploadModule } from 'src/files-upload/files-upload.module';
+import { Pago } from 'src/Pagos/Pagos.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Rutina, Category, Users, Ejercicio, Recibo]),
+    TypeOrmModule.forFeature([
+      Rutina,
+      Category,
+      Users,
+      Ejercicio,
+      Recibo,
+      Pago,
+    ]),
     ReciboModule,
     FilesUploadModule,
   ],
