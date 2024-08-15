@@ -44,7 +44,7 @@ export class AuthService {
     }
     return 'entrenador creado';
   }
-  async auth0(body: loginAuthDto){
-    return await this.authRepository.auth0(body)
+  async auth0(body: loginAuthDto) {
+    return await this.authRepository.auth0(body);
   }
 }
