@@ -21,7 +21,6 @@ import { planClient } from 'config/mercadoPagoPlan.config';
 import { Request, Response, response } from 'express';
 import axios from 'axios';
 import { Pago } from 'src/Pagos/Pagos.entity';
-import { Mutex } from 'async-mutex';
 
 @Injectable()
 export class PlanRepository {
@@ -134,7 +133,7 @@ export class PlanRepository {
       const { categoryToUpdate, ...planSinCategory } = plan;
       planSinCategory.check = SolicitudState.PENDING;
       return await this.planRepository.update(identificacion, planSinCategory);
-    } else if (userAdmin.role !== UserRole.ADMIN || userAdmin.role !== UserRole.SUPERADMIN) {
+    } else {
       const planToUpdate = await this.planRepository.findOne({
         where: { id: identificacion },
       });
@@ -163,7 +162,7 @@ export class PlanRepository {
       throw new NotFoundException('Plan no encontrado o eliminado');
     }
 
-    if (userAdmin.role !== UserRole.ADMIN && userAdmin.role !== UserRole.SUPERADMIN) {
+    if (user.role !== UserRole.ADMIN && user.role !== UserRole.SUPERADMIN) {
       const userSub = await this.userRepository.findOne({
         where: { id: user.sub },
       });
@@ -228,8 +227,8 @@ export class PlanRepository {
           },
         ],
         back_urls: {
-          success: 'https://fit-hub-front-end.vercel.app/mercadoPagoPlan/success',
-          failure: 'https://fit-hub-front-end.vercel.app/mercadoPagoPlan/failure',
+          success: 'http://localhost:3000/mercadoPagoPlan/success',
+          failure: 'http://localhost:3000/mercadoPagoPlan/failure',
         },
         auto_return: 'approved',
        
@@ -264,23 +263,19 @@ export class PlanRepository {
     const preferencia = await this.pagoRepository.findOne({
       where: {preferenceId: data.preference_id}
     })
-    console.log(preferencia);
-
     const planId = preferencia.idPago;
     if(!planId){
       throw new BadRequestException('no entro')
     }
     const status = data.status;
-    if (preferencia.estado===true){
-      // throw new BadRequestException('El usuario ya realizo la compra')
-      if (status === 'approved') {
-        this.handlePaymentSuccess(userId, planId);
-        await this.pagoRepository.update(preferencia.preferenceId, {estado: false});
-        return 'recibo realizado, compra finalizada';
-      }
+    if (preferencia.estado===false){
+      throw new BadRequestException('El usuario ya realizo la compra')
+    }
+    if (status === 'approved') {
+      this.handlePaymentSuccess(userId, planId);
+      await this.pagoRepository.update(data.preference_id, {estado: false});
+      return 'recibo realizado, compra finalizada';
     }
     return 'no se pudo realizar la compra';
   }
-
-
 }

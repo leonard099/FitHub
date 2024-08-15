@@ -139,7 +139,7 @@ export class RutinaRepository {
         await this.rutinaRepository.save(rutinaToUpdate);
       }
 
-      if (rutina.exercise) {
+      if(rutina.exercise){
         const exercise = await this.exerciceRepository.find({
           where: { id: In(rutina.exercise) },
         });
@@ -151,8 +151,8 @@ export class RutinaRepository {
       }
       const { category, exercise, ...rutinaSinCategory } = rutina;
 
-      await this.rutinaRepository.update(id, rutinaSinCategory);
-    } else if (userAdmin.role === UserRole.ADMIN || userAdmin.role === userRole.SUPERADMIN) {
+       await this.rutinaRepository.update(id, rutinaSinCategory);
+    } else {
       const rutinaToUpdate = await this.rutinaRepository.findOne({
         where: { id: id },
       });
@@ -167,9 +167,9 @@ export class RutinaRepository {
           throw new NotFoundException('Categoría no encontrada');
         }
         rutinaToUpdate.category = category;
-        await this.rutinaRepository.save(rutinaToUpdate);
+        await this.rutinaRepository.save(rutinaToUpdate)
       }
-      if (rutina.exercise) {
+      if(rutina.exercise){
         const exercise = await this.exerciceRepository.find({
           where: { id: In(rutina.exercise) },
         });
@@ -194,7 +194,7 @@ export class RutinaRepository {
       throw new NotFoundException('Rutina no encontrada o eliminada');
     }
 
-    if (userAdmin.role !== UserRole.ADMIN && userAdmin.role !== UserRole.SUPERADMIN) {
+    if (user.role !== UserRole.ADMIN && user.role !== UserRole.SUPERADMIN) {
       const userSolicitud = await this.userRepository.findOne({
         where: { id: user.sub },
       });
@@ -250,8 +250,8 @@ export class RutinaRepository {
           },
         ],
         back_urls: {
-          success: 'https://fit-hub-front-end.vercel.app/mercadoPagoRutina/success',
-          failure: 'https://fit-hub-front-end.vercel.app/mercadoPagoRutina/failure',
+          success: 'http://localhost:3000/mercadoPagoRutina/success',
+          failure: 'http://localhost:3000/mercadoPagoRutina/failure',
         },
         auto_return: 'approved',
       };
@@ -262,7 +262,7 @@ export class RutinaRepository {
       this.pagoRepository.save({
         preferenceId: result.id,
         idUsuario: userId,
-        idPago: rutinaId,
+        idPago: req.body.rutinaId,
       });
 
       res.json({ id: result.id });
@@ -277,48 +277,43 @@ export class RutinaRepository {
       where: { preferenceId: data.preference_id },
     });
     const rutinaId = preferencia.idPago;
-    console.log('asdasdlk.......', rutinaId);
     if (!rutinaId) {
       throw new BadRequestException('no entro');
     }
     const status = data.status;
-    if (preferencia.estado === true) {
-      if (status === 'approved') {
-        const compradorUser = await this.userRepository.findOne({
-          where: { id: userId },
-          relations: ['routine'],
-        });
-        await this.pagoRepository.update(data.preference_id, { estado: false });
-        if (!compradorUser) {
-          throw new ConflictException('Usuario no encontrado');
-        }
-
-        const rutina = await this.rutinaRepository.findOne({
-          where: { id: rutinaId },
-        });
-        if (!rutina) {
-          throw new ConflictException('Usuario no encontrado');
-        }
-        console.log(
-          '............llamar la atencion.......',
-          compradorUser.routine,
-        );
-        compradorUser.routine.push(rutina);
-        await this.userRepository.save(compradorUser);
-
-        const reciboData = {
-          user: compradorUser,
-          rutinas: [rutina],
-          planes: [],
-          price: null,
-          state: StateRecibo.PAGADO,
-        };
-
-        const reciboGuardado =
-          await this.reciboService.createRecibo(reciboData);
-        return 'recibo realizado, compra finalizada';
+    if(preferencia.estado === false){
+    if (status === 'approved') {
+      const compradorUser = await this.userRepository.findOne({
+        where: { id: userId },
+        relations: ['routine'],
+      });
+      await this.pagoRepository.update(data.preference_id, { estado: false });
+      if (!compradorUser) {
+        throw new ConflictException('Usuario no encontrado');
       }
-      return 'no se pudo realizar la compra';
+
+      const rutina = await this.rutinaRepository.findOne({
+        where: { id: rutinaId },
+      });
+      if (!rutina) {
+        throw new ConflictException('Usuario no encontrado');
+      }
+
+      compradorUser.routine.push(rutina);
+      await this.userRepository.save(compradorUser);
+
+      const reciboData = {
+        user: compradorUser,
+        rutinas: [rutina],
+        planes: [],
+        price: null,
+        state: StateRecibo.PAGADO,
+      };
+
+      const reciboGuardado = await this.reciboService.createRecibo(reciboData);
+      return 'recibo realizado, compra finalizada';
     }
+    return 'no se pudo realizar la compra';
   }
+}
 }
