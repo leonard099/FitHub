@@ -77,7 +77,7 @@ export class PlanController {
     UserRole.USER,
   )
   @UseGuards(AuthGuard, RolesGuard)
-  async createSubscription(@Req() req: Request, @Res() res) {
+  async createSubscription(@Req() req, @Res() res) {
     const result = await this.planService.createSubscription(req, res);
     return result;
   }
