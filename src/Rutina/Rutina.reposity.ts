@@ -194,7 +194,7 @@ export class RutinaRepository {
       throw new NotFoundException('Rutina no encontrada o eliminada');
     }
 
-    if (user.role !== UserRole.ADMIN) {
+    if (user.role !== UserRole.ADMIN || user.role !== UserRole.SUPERADMIN) {
       const userSolicitud = await this.userRepository.findOne({
         where: { id: user.sub },
       });
