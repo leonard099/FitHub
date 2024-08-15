@@ -281,11 +281,13 @@ export class RutinaRepository {
       throw new BadRequestException('no entro');
     }
     const status = data.status;
+    if(preferencia.estado === false){
     if (status === 'approved') {
       const compradorUser = await this.userRepository.findOne({
         where: { id: userId },
         relations: ['routine'],
       });
+      await this.pagoRepository.update(data.preference_id, { estado: true });
       if (!compradorUser) {
         throw new ConflictException('Usuario no encontrado');
       }
@@ -313,4 +315,5 @@ export class RutinaRepository {
     }
     return 'no se pudo realizar la compra';
   }
+}
 }

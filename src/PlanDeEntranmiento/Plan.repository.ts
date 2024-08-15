@@ -268,8 +268,12 @@ export class PlanRepository {
       throw new BadRequestException('no entro')
     }
     const status = data.status;
+    if (preferencia.estado===false){
+      throw new BadRequestException('El usuario ya realizo la compra')
+    }
     if (status === 'approved') {
       this.handlePaymentSuccess(userId, planId);
+      await this.pagoRepository.update(preferencia, {estado: false});
       return 'recibo realizado, compra finalizada';
     }
     return 'no se pudo realizar la compra';
