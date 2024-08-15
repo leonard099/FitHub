@@ -241,7 +241,7 @@ export class PlanRepository {
       this.pagoRepository.save({
         preferenceId: result.id,
         idUsuario: userId,
-        idPago: req.body.planId,
+        idPago: planId,
       });
 
       res.json({ id: result.id});
