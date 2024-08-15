@@ -114,7 +114,7 @@ export class PlanRepository {
     const userAdmin = await this.userRepository.findOne({
       where: { id: admin },
     });
-    if (userAdmin.role !== UserRole.ADMIN) {
+    if (userAdmin.role !== UserRole.ADMIN || userAdmin.role !== UserRole.SUPERADMIN) {
       const planToUpdate = await this.planRepository.findOne({
         where: { id: identificacion, admin: userAdmin },
       });
