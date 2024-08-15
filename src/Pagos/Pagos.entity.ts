@@ -11,6 +11,6 @@ export class Pago {
   @Column()
   idPago: string;
 
-  @Column({default: true})
+  @Column({ default: true })
   estado: boolean;
 }
