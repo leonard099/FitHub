@@ -59,7 +59,7 @@ export class PlanService {
     return await this.planRepository.deletePlan(id, user);
   }
 
-  async webhook(req, res) {
-    return await this.planRepository.webhook(req, res);
+  async webhook(data, userId) {
+    return await this.planRepository.webhook(data, userId);
   }
 }

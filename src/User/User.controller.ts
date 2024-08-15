@@ -24,7 +24,7 @@ export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Get()
-  @Roles(UserRole.ADMIN,UserRole.SUPERADMIN)
+  @Roles(UserRole.ADMIN, UserRole.SUPERADMIN)
   @UseGuards(AuthGuard, RolesGuard)
   getUsers() {
     return this.userService.getUsers();
@@ -34,7 +34,6 @@ export class UserController {
   getCoach() {
     return this.userService.getCoach();
   }
-
 
   @Get(':id')
   @UseGuards(AuthGuard)

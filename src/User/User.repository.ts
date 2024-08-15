@@ -16,17 +16,25 @@ export class UsersRepository {
     return allUsers;
   }
 
+  async getUserById(id: string) {
+    return await this.userRepository.findOne({
+      where: {
+        id,
+        isActive: true,
+      },
+      relations: ['routine', 'subsciption.plan'],
+    });
+  }
+
+
   async getCoach() {
     const allCoach = await this.userRepository.find({
-      where: { role:UserRole.ENTRENADOR, isActive: true },
+      where: { role: UserRole.ENTRENADOR, isActive: true },
     });
-    
+
     return allCoach;
   }
 
-  async getUserById(id) {
-    return await this.userRepository.findOneBy({ id, isActive: true });
-  }
   async getUserByIdPyR(id) {
     const userRyP = await this.userRepository.findOne({
       where: { id, isActive: true },

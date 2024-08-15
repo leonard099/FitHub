@@ -1,5 +1,4 @@
 /* eslint-disable prettier/prettier */
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import {
   BadRequestException,
   ConflictException,
@@ -21,6 +20,7 @@ import { SubscriptionsRepository } from 'src/Suscripciones/suscripciones.reposit
 import { planClient } from 'config/mercadoPagoPlan.config';
 import { Request, Response, response } from 'express';
 import axios from 'axios';
+import { Pago } from 'src/Pagos/Pagos.entity';
 
 @Injectable()
 export class PlanRepository {
@@ -29,6 +29,7 @@ export class PlanRepository {
     @InjectRepository(Users) private userRepository: Repository<Users>,
     @InjectRepository(Category)
     private categoryRepository: Repository<Category>,
+    @InjectRepository(Pago) private pagoRepository: Repository<Pago>,
     private readonly subscriptionsRepository: SubscriptionsRepository,
   ) {}
 
@@ -184,7 +185,7 @@ export class PlanRepository {
 
   // REVISAR EL CHEQUEO DE SI YA EXISTE EL PLAN DENTRO DEL USER. ASI NO COMPRADOS VECES. REVISAR EL INVOICE DE CADUCIDAD
 
-  async createOrderPlan(req: Request, res: Response) {
+  async createOrderPlan(req, res: Response) {
     const userId = req.body.id;
     const planId = req.body.planId;
     // const planYaComprado = await this.planRepository.findOne({
@@ -208,7 +209,7 @@ export class PlanRepository {
       const user = await this.userRepository.findOne({
         where: { id: userId, isActive: true },
       });
-      
+
       if (!user) {
         throw new ConflictException('Usuario no encontrado');
       }
@@ -218,7 +219,7 @@ export class PlanRepository {
       if (!plan) {
         throw new ConflictException('Plan no encontrado');
       }
-      
+
       const body = {
         items: [
           {
@@ -231,45 +232,29 @@ export class PlanRepository {
           },
         ],
         back_urls: {
-          success: 'http://localhost:3000/success',
-          failure: 'http://localhost:3000/failure',
+          success: 'http://localhost:3001/plan/webhook',
+          failure: 'http://localhost:3001/plan/webhook',
+          pending: 'http://localhost:3001/plan/webhook',
         },
         auto_return: 'approved',
-        notification_url: 'https://fithub-2mzr.onrender.com/plan/webhook',
+        notification_url: 'http://localhost:3001/plan/webhook',
       };
 
       const preference = new Preference(planClient);
-      const result = await preference.create({ body }); 
+      const result = await preference.create({ body });
       const paymentId = result.id;
-      
 
-    // Devuelve la preferencia creada al frontend para que se pueda redirigir a la URL de MercadoPago
-    res.json({ id: result.id, init_point: result.init_point });
-  } catch (error) {
-    console.error('Error al crear la preferencia de pago:', error);
-    res.status(500).send('Error al crear la preferencia de pago');
-  }
+      this.pagoRepository.save({
+        preferenceId: result.id,
+        idUsuario: userId,
+        idPago: req.body.planId,
+      });
 
-      //aca es donde deberiamos cortar el metodo, enviar el res.json y que desde el webhook continuar con la suscripcion si es que el estado es exitoso
-      // this.handlePaymentSuccess(userId, planId);
-      // try {
-      //   const response = await axios.get(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
-      //     headers: {
-      //       'Authorization': `Bearer APP_USR-6795275057660122-073011-154dfa6cc6845f14ff72ae59d7723aa8-1289604664`,
-      //     }
-      //   });
-    
-      //   // Aquí puedes manejar la respuesta de la API
-      //   console.log('Payment Status:', response.data.status);
-      //   res.json({ id: result.id });
-      // } catch (error) {
-      //   console.error('Error fetching payment status:', error.response ? error.response.data : error.message);
-      //   throw new Error('Error fetching payment status');
-      // }
-    // } catch (error) {
-    //   console.error('Error al crear la preferencia de pago:', error);
-    //   res.status(500).send('Error al crear la preferencia de pago');
-    // }
+      res.json({ id: result.id});
+    } catch (error) {
+      console.error('Error al crear la preferencia de pago:', error);
+      res.status(500).send('Error al crear la preferencia de pago');
+    }
   }
 
   async handlePaymentSuccess(userId: string, planId: string) {
@@ -280,23 +265,19 @@ export class PlanRepository {
     }
   }
 
-  async webhook(req, res){
-    const paymentId = req.body.data.id;
-
-    try {
-      const payment = await axios.get(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
-        headers: {
-          Authorization: `Bearer APP_USR-6795275057660122-073011-154dfa6cc6845f14ff72ae59d7723aa8-1289604664`, // Asegúrate de usar el token correcto
-        },
-      });
-
-      if (payment.data.status === 'approved') {
-        console.log('estoy probando la entrada por la ruta')
-      }
-      res.sendStatus(200);
-    } catch (error) {
-      console.error('Error in MercadoPago Webhook:', error);
-      res.sendStatus(500);
+  async webhook(data, userId) {
+    const preferencia = await this.pagoRepository.findOne({
+      where: {preferenceId: data.preference_id}
+    })
+    const planId = preferencia.idPago;
+    if(!planId){
+      throw new BadRequestException('no entro')
     }
+    const status = data.status;
+    if (status === 'approved') {
+      this.handlePaymentSuccess(userId, planId);
+      return 'recibo realizado, compra finalizada';
+    }
+    return 'no se pudo realizar la compra';
   }
 }
