@@ -27,9 +27,7 @@ export class AdminRepository {
   ) {}
   async solicitudPending(id: string) {
     const admin = await this.userRepository.findOne({ where: { id } });
-    if (admin.role !== 'admin') {
-      throw new AdminPermissionException();
-    }
+    
     const coachs = await this.userRepository.find({
       where: { solicitud: SolicitudState.PENDING },
     });
