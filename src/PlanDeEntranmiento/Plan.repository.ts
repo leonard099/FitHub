@@ -186,7 +186,7 @@ export class PlanRepository {
   // REVISAR EL CHEQUEO DE SI YA EXISTE EL PLAN DENTRO DEL USER. ASI NO COMPRADOS VECES. REVISAR EL INVOICE DE CADUCIDAD
 
   async createOrderPlan(req, res: Response) {
-    const userId = req.body.id;
+    const userId = req.body.sub;
     const planId = req.body.planId;
     
     console.log(userId, planId);
